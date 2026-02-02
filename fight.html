@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Combats</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0a0a1a; color: #fff; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* --- AFFICHAGE GEMMES --- */
+        #gemDisplay {
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85); border: 2px solid #ffd700;
+            padding: 8px 20px; border-radius: 30px; color: #ffd700;
+            font-weight: bold; z-index: 2000; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+        .gem-anim { animation: gemBounce 0.5s ease; }
+        @keyframes gemBounce { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.2); color: #fff; } }
+
+        /* --- MENU DIFFICULTÉ --- */
+        #diffMenu { width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0a1a; z-index: 1000; position: absolute; }
+        .diff-btn { width: 220px; padding: 15px; margin: 10px; border-radius: 8px; border: 2px solid #444; cursor: pointer; font-weight: bold; transition: 0.3s; text-align: center; }
+        .diff-btn:hover { transform: scale(1.05); border-color: #ffd700; }
+        .btn-menu-exit { background: #444 !important; color: #fff !important; margin-top: 20px !important; width: 150px; }
+        
+        /* --- SELECTION --- */
+        #selectionScreen { width: 100vw; height: 100vh; padding: 20px; text-align: center; background: #1a1a2e; z-index: 500; overflow-y: auto; position: absolute; }
+        .deck-selection { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; max-width: 1000px; margin: 20px auto; }
+        .card { background: #252545; border: 2px solid #444; border-radius: 10px; padding: 10px; cursor: pointer; transition: 0.2s; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        .card img { width: 90%; height: 90%; object-fit: contain; }
+        .card.selected { border-color: #ffd700; background: #353565; box-shadow: 0 0 10px #ffd700; }
+        .card.diamant { border: 3px double #b9f2ff; }
+        .card.locked { filter: grayscale(1) brightness(0.2); cursor: not-allowed; }
+        .card-qty { position: absolute; bottom: 4px; right: 6px; background: rgba(0,0,0,0.8); font-size: 0.7rem; padding: 2px 5px; border-radius: 4px; color: #ffd700; }
+
+        /* --- ARENA --- */
+        #battleScreen { display: flex; width: 100vw; height: 100vh; position: relative; }
+        .arena { flex: 1; display: flex; flex-direction: column; background: radial-gradient(circle, #252545 0%, #101025 100%); position: relative; }
+        .scroll-zone { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .battlefield { display: flex; justify-content: center; gap: 60px; width: 100%; margin-top: 10px; }
+        .team { display: flex; flex-direction: column; gap: 15px; width: 200px; }
+
+        .loquimon { background: rgba(255,255,255,0.05); border: 2px solid #444; border-radius: 12px; padding: 10px; cursor: pointer; text-align: center; position: relative; }
+        .loquimon img { width: 100px; height: 100px; object-fit: contain; }
+        .card-name-label { font-size: 0.65rem; color: #aaa; margin-top: 4px; text-transform: uppercase; }
+        .hp-bar { width: 100%; background: #111; height: 6px; border-radius: 3px; margin-top: 5px; overflow: hidden; }
+        .hp-fill { height: 100%; background: #4ecca3; transition: width 0.3s; }
+        
+        .active-atk { border-color: #ffd700 !important; }
+        .ko { opacity: 0.1; filter: grayscale(1); pointer-events: none; }
+        .targetable { border-color: #ff4757 !important; animation: pulse 0.8s infinite; }
+        @keyframes pulse { 50% { border-color: #fff; } }
+
+        /* --- PIECE --- */
+        #coin-container { position: fixed; bottom: -200px; left: 50%; transform: translateX(-50%); width: 120px; height: 120px; perspective: 1000px; z-index: 2000; display: none; }
+        #coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
+        .side { position: absolute; width: 100%; height: 100%; border-radius: 50%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 3rem; border: 6px solid #ffd700; }
+        .heads { background: #daa520; color: #fff; }
+        .tails { background: #000; color: #333; transform: rotateY(180deg); }
+        @keyframes toss { 0% { bottom: -150px; } 50% { bottom: 60%; } 100% { bottom: 40%; } }
+
+        /* --- UI --- */
+        .console-ui { background: rgba(0,0,0,0.95); border-top: 2px solid #ffd700; height: 120px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        button { margin: 4px; padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+        .btn-atk { background: #e94560; color: white; }
+        #toggleLog { position: absolute; top: 10px; right: 10px; background: #4ecca3; padding: 5px 10px; border-radius: 4px; cursor: pointer; color: #000; font-weight: bold; font-size: 0.7rem; z-index: 2000; }
+        .side-log { width: 250px; background: rgba(0,0,0,0.98); position: absolute; right: -250px; top: 0; bottom: 0; transition: 0.3s; z-index: 1500; padding: 15px; overflow-y: auto; border-left: 1px solid #ffd700; font-size: 0.8rem; }
+        .side-log.open { right: 0; }
+        .hidden { display: none !important; }
+        #vsOverlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; font-size: 100px; font-weight: 900; color: #fff; text-shadow: 0 0 20px #ff4757; pointer-events: none; }
+        .vs-pop { display: flex !important; animation: vsScale 0.3s ease-out; }
+        @keyframes vsScale { 0% { transform: scale(3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .duel-p { position: fixed !important; top: 40%; left: 35%; transform: translate(-50%, -50%) scale(1.3) !important; z-index: 1001; border-color: #ff6a00 !important; background: #1a1a2e !important; }
+        .duel-e { position: fixed !important; top: 40%; left: 65%; transform: translate(-50%, -50%) scale(1.3) !important; z-index: 1001 !important; border-color: #ff4757 !important; background: #1a1a2e !important; }
+        .atk-hit-p { animation: hitP 0.3s; } @keyframes hitP { 50% { left: 50%; } }
+        .atk-hit-e { animation: hitE 0.3s; } @keyframes hitE { 50% { left: 50%; } }
+    </style>
+  </head>
+  <body>
+    <div id="gemDisplay">💎 <span id="gemCount">0</span></div>
+    <div id="vsOverlay">VS</div>
+    <div id="diffMenu">
+      <h1 style="color:#ffd700">CHOISIR L'ADVERSAIRE</h1>
+      <div class="diff-btn" style="background:#cd7f32" onclick="setDiff('bronze')">BOT
+        BRONZE</div>
+      <div class="diff-btn" style="background:#c0c0c0; color:#000" onclick="setDiff('argent')">BOT
+        ARGENT</div>
+      <div class="diff-btn" style="background:#ffd700; color:#000" onclick="setDiff('or')">BOT
+        OR</div>
+      <div class="diff-btn" style="background:#e5e4e2; color:#000" onclick="setDiff('platine')">BOT
+        PLATINE</div>
+      <div class="diff-btn" style="background:linear-gradient(45deg, #b9f2ff, #fff)"
+
+        onclick="setDiff('diamant')">BOT DIAMANT</div>
+      <button class="diff-btn btn-menu-exit" onclick="window.location.href='Loquimon.html'">MENU</button>
+    </div>
+    <div id="coin-container">
+      <div id="coin">
+        <div class="side heads">🐾</div>
+        <div class="side tails"></div>
+      </div>
+    </div>
+    <div id="selectionScreen" class="hidden">
+      <h2 style="margin:0;">VOTRE DECK (5)</h2>
+      <div id="counter" style="color:#ffd700; font-size:0.9rem; margin:5px 0;"></div>
+      <div id="errorBox" style="color:#ff4757; font-size:0.8rem; height:15px;"></div>
+      <div class="deck-selection" id="deckContainer"></div>
+      <button id="startBtn" class="btn-atk" onclick="startBattle()">COMBATTRE</button>
+    </div>
+    <div id="battleScreen" class="hidden">
+      <div id="toggleLog" onclick="document.getElementById('sideLog').classList.toggle('open')">LOGS</div>
+      <div class="arena">
+        <div class="scroll-zone">
+          <div class="battlefield">
+            <div class="team" id="playerTeam"></div>
+            <div class="team" id="enemyTeam"></div>
+          </div>
+        </div>
+        <div class="console-ui">
+          <div id="instruction" style="color:#ffd700; font-size:0.9rem; margin-bottom:5px; text-align:center;"></div>
+          <div id="actionMenu"></div>
+          <div id="endGameMenu" class="hidden"> <button class="btn-atk" onclick="location.reload()">REJOUER</button>
+            <button class="btn-atk" style="background:#444" onclick="window.location.href='Loquimon.html'">MENU</button>
+          </div>
+        </div>
+      </div>
+      <div class="side-log" id="sideLog">
+        <div id="battleLog"></div>
+      </div>
+    </div>
+    <script>
+// --- LOGIQUE GEMMES ET COLLECTION ---
+let totalGemmes = parseInt(localStorage.getItem("gemmes")) || 0;
+const MaCollection = JSON.parse(localStorage.getItem("collection")) || {};
+document.getElementById("gemCount").innerText = totalGemmes;
+
+const rarityStats = { 
+    "bronze":{hp:80, atk:15}, 
+    "argent":{hp:110, atk:22}, 
+    "or":{hp:150, atk:35}, 
+    "platine":{hp:200, atk:45}, 
+    "diamant":{hp:300, atk:65} 
+};
+
+const allCards = [
+    // --- BRONZE ---
+    { nom: "escargot", rarete: "bronze", special: "Bave Gluante" }, 
+    { nom: "ver de terre", rarete: "bronze", special: "Tunnel Surprise" },
+    { nom: "taupe", rarete: "bronze", special: "Coup de Griffe" }, 
+    { nom: "rat", rarete: "bronze", special: "Morsure Rapide" },
+    { nom: "pigeon", rarete: "bronze", special: "Rafale de Plumes" }, 
+    { nom: "moustique", rarete: "bronze", special: "Piqûre" },
+    { nom: "mouche", rarete: "bronze", special: "Zonzonnement" }, 
+    { nom: "cafard", rarete: "bronze", special: "Invasion" },
+    { nom: "bousier", rarete: "bronze", special: "Boule de Choc" },
+    { nom: "abeille", rarete: "bronte", special: "Dard Toxique" },
+
+    // --- ARGENT ---
+    { nom: "perruche", rarete: "argent", special: "Cri Strident" }, 
+    { nom: "cochon d'inde", rarete: "argent", special: "Charge Bouboule" },
+    { nom: "écureuil", rarete: "argent", special: "Jet de Noisette" }, 
+    { nom: "tortue", rarete: "argent", special: "Coup de Carapace" },
+    { nom: "poisson", rarete: "argent", special: "Bulle d'Eau" }, 
+    { nom: "chien", rarete: "argent", special: "Croc d'Acier" },
+    { nom: "cheval", rarete: "argent", special: "Ruade" }, 
+    { nom: "chat", rarete: "argent", special: "Griffe Acérée" },
+    { nom: "cochon", rarete: "argent", special: "Charge Groin" },
+    { nom: "coq", rarete: "argent", special: "Chant du Matin" },
+    { nom: "lapin", rarete: "argent", special: "Saut Éclair" },
+    { nom: "vache", rarete: "argent", special: "Coup de Sabot" },
+    { nom: "serpent", rarete: "argent", special: "Venin Cruel" },
+
+    // --- OR ---
+    { nom: "lion", rarete: "or", special: "Rugissement Royal" }, 
+    { nom: "aigle", rarete: "or", special: "Plongée Foudroyante" },
+    { nom: "baleine", rarete: "or", special: "Geyser" }, 
+    { nom: "cerf", rarete: "or", special: "Coup de Bois" },
+    { nom: "Elephant", rarete: "or", special: "Barissement" }, 
+    { nom: "tigre", rarete: "or", special: "Bond de Prédateur" },
+    { nom: "loup", rarete: "or", special: "Hurlement Lunaire" },
+    { nom: "girafe", rarete: "or", special: "Coup de Cou" },
+    { nom: "rhinoceros", rarete: "or", special: "Charge Blindée" },
+    { nom: "pingouin", rarete: "or", special: "Glissade" },
+
+    // --- PLATINE ---
+    { nom: "requin", rarete: "platine", special: "Morsure Fatale" }, 
+    { nom: "panthère", rarete: "platine", special: "Attaque Ombre" }, 
+    { nom: "macareux", rarete: "platine", special: "Bec de Fer" },
+    { nom: "lynx", rarete: "platine", special: "Regard Glaçant" }, 
+    { nom: "axolotl", rarete: "platine", special: "Régénération" },
+    { nom: "addax", rarete: "platine", special: "Cornes de Tempête" }, 
+    { nom: "pery", rarete: "platine", special: "Agent Secret P" },
+    { nom: "panda", rarete: "platine", special: "Bambou Smash" },
+
+    // --- DIAMANT ---
+    { nom: "yeti", rarete: "diamant", special: "Avalanche" }, 
+    { nom: "licorne", rarete: "diamant", special: "Rayon Magique" }, 
+    { nom: "phénix", rarete: "diamant", special: "Renaissance Flamboyante" },
+    { nom: "kraken", rarete: "diamant", special: "Étreinte des Abysses" }, 
+    { nom: "Dragon", rarete: "diamant", special: "Souffle Ardent" }
+];
+
+let playerDeck = [], enemyDeck = [], selectedIdx = null, canPlay = true, currentAtk = null, currentDiff = 'bronze';
+
+function setDiff(d) {
+    currentDiff = d;
+    document.getElementById("diffMenu").classList.add("hidden");
+    document.getElementById("selectionScreen").classList.remove("hidden");
+    renderSelection();
+}
+
+function renderSelection() {
+    const container = document.getElementById("deckContainer");
+    container.innerHTML = "";
+    const countD = playerDeck.filter(c => c.rarete === 'diamant').length;
+    const countP = playerDeck.filter(c => c.rarete === 'platine').length;
+    document.getElementById("counter").innerText = `Diamant: ${countD}/1 | Platine: ${countP}/2`;
+
+    allCards.forEach(card => {
+        const quantite = MaCollection[card.nom] || 0;
+        const possedee = quantite > 0;
+        const div = document.createElement("div");
+        div.className = `card ${playerDeck.find(c => c.nom === card.nom) ? 'selected' : ''} ${card.rarete} ${!possedee ? 'locked' : ''}`;
+        
+        if (possedee) {
+            div.innerHTML = `<img src="images/${card.nom}.png" onerror="this.src='https://via.placeholder.com/80?text=?'"><div class="card-qty">x${quantite}</div>`;
+            div.onclick = () => toggleCard(card);
+        } else {
+            div.innerHTML = `<div style="font-size:2rem; color:#444;">?</div>`;
+        }
+        container.appendChild(div);
+    });
+
+    const btn = document.getElementById("startBtn");
+    btn.style.opacity = playerDeck.length === 5 ? "1" : "0.5";
+    btn.style.pointerEvents = playerDeck.length === 5 ? "auto" : "none";
+}
+
+function toggleCard(card) {
+    const err = document.getElementById("errorBox"); err.innerText = "";
+    if(playerDeck.find(c => c.nom === card.nom)) {
+        playerDeck = playerDeck.filter(c => c.nom !== card.nom);
+    } else {
+        if(playerDeck.length >= 5) return;
+        if(card.rarete === 'diamant' && playerDeck.filter(c => c.rarete === 'diamant').length >= 1) return err.innerText = "1 Diamant max";
+        if(card.rarete === 'platine' && playerDeck.filter(c => c.rarete === 'platine').length >= 2) return err.innerText = "2 Platines max";
+        playerDeck.push({...card});
+    }
+    renderSelection();
+}
+
+function startBattle() {
+    const pool = getBotPool(currentDiff);
+    enemyDeck = Array.from({length: 5}, () => ({...pool[Math.floor(Math.random()*pool.length)]}));
+    [playerDeck, enemyDeck].forEach(deck => deck.forEach(l => {
+        const s = rarityStats[l.rarete] || rarityStats["bronze"];
+        l.maxHP = s.hp; l.hp = s.hp; l.atkPower = s.atk;
+    }));
+    document.getElementById("selectionScreen").classList.add("hidden");
+    document.getElementById("battleScreen").classList.remove("hidden");
+    renderBattle();
+}
+
+function getBotPool(diff) {
+    if(diff === 'bronze') return allCards.filter(c => c.rarete === 'bronze');
+    if(diff === 'argent') return allCards.filter(c => ['bronze', 'argent'].includes(c.rarete));
+    if(diff === 'or') return allCards.filter(c => ['argent', 'or'].includes(c.rarete));
+    if(diff === 'platine') return allCards.filter(c => ['or', 'platine'].includes(c.rarete));
+    return allCards.filter(c => ['platine', 'diamant'].includes(c.rarete));
+}
+
+function renderBattle() {
+    const pDiv = document.getElementById("playerTeam");
+    const eDiv = document.getElementById("enemyTeam");
+    pDiv.innerHTML = ""; eDiv.innerHTML = "";
+    playerDeck.forEach((l, i) => pDiv.appendChild(createLoquiEl(l, i, true)));
+    enemyDeck.forEach((l, i) => eDiv.appendChild(createLoquiEl(l, i, false)));
+}
+
+function createLoquiEl(l, i, isPlayer) {
+    const div = document.createElement("div");
+    div.id = isPlayer ? `p-card-${i}` : `e-card-${i}`;
+    div.className = `loquimon ${l.hp <= 0 ? 'ko' : ''} ${isPlayer && selectedIdx === i ? 'active-atk' : ''}`;
+    if(!isPlayer && currentAtk && l.hp > 0) div.classList.add("targetable");
+    div.innerHTML = `<img src="images/${l.nom}.png" onerror="this.src='https://via.placeholder.com/100?text=?'"><div class="card-name-label">${l.nom}</div><div class="hp-bar"><div class="hp-fill" style="width:${(l.hp/l.maxHP)*100}%"></div></div>`;
+    div.onclick = () => {
+        if(isPlayer && canPlay && !currentAtk) { selectedIdx = i; showActions(); }
+        else if(!isPlayer && currentAtk && l.hp > 0) attackSequence(i);
+    };
+    return div;
+}
+
+function showActions() {
+    renderBattle();
+    const p = playerDeck[selectedIdx];
+    document.getElementById("instruction").innerText = p.nom.toUpperCase();
+    document.getElementById("actionMenu").innerHTML = `
+        <button class="btn-atk" onclick="prepareAtk(1, 1, 'Attaque')">ATTAQUE</button>
+        <button class="btn-atk" style="background:#fca311; color:#000" onclick="prepareAtk(2.5, 0.5, '${p.special}')">SPÉCIAL</button>
+        <button class="btn-atk" style="background:#00a8ff" onclick="rouletteHeal()">SOIN</button>
+        <button class="btn-atk" style="background:#555" onclick="surrender()">ABANDONNER</button>`;
+}
+
+function prepareAtk(m, c, n) {
+    currentAtk = { mult: m, chance: c, name: n };
+    document.getElementById("instruction").innerText = "CIBLEZ L'ENNEMI";
+    renderBattle();
+}
+
+async function attackSequence(tIdx) {
+    if(!canPlay) return; canPlay = false;
+    const isSpecial = currentAtk.mult > 1;
+    const success = await flipCoin(isSpecial);
+    const aEl = document.getElementById(`p-card-${selectedIdx}`);
+    const tEl = document.getElementById(`e-card-${tIdx}`);
+    
+    if(success) {
+        // --- AFFICHAGE DU NOM DE L'ATTAQUE SI SPÉCIAL ---
+        if(isSpecial) {
+            const specLabel = document.createElement("div");
+            specLabel.innerText = currentAtk.name.toUpperCase();
+            specLabel.style = "position:fixed; top:20%; left:50%; transform:translateX(-50%); font-size:40px; color:#fca311; font-weight:900; text-shadow:0 0 15px rgba(252,163,17,0.8); z-index:2100; animation: vsScale 0.5s ease-out;";
+            document.body.appendChild(specLabel);
+            setTimeout(() => specLabel.remove(), 1000);
+        }
+
+        document.getElementById("vsOverlay").classList.add("vs-pop");
+        aEl.classList.add("duel-p"); tEl.classList.add("duel-e");
+        await new Promise(r => setTimeout(r, 400));
+        aEl.classList.add("atk-hit-p");
+        await new Promise(r => setTimeout(r, 150));
+        
+        const dmg = Math.round(playerDeck[selectedIdx].atkPower * currentAtk.mult);
+        enemyDeck[tIdx].hp = Math.max(0, enemyDeck[tIdx].hp - dmg);
+        
+        log(`⚔️ ${playerDeck[selectedIdx].nom} utilise ${currentAtk.name} ! (-${dmg})`);
+        
+        await new Promise(r => setTimeout(r, 400));
+        aEl.classList.remove("duel-p", "atk-hit-p"); tEl.classList.remove("duel-e");
+        document.getElementById("vsOverlay").classList.remove("vs-pop");
+    } else { 
+        log(`💨 ${playerDeck[selectedIdx].nom} a raté son spécial !`); 
+    }
+
+    currentAtk = null; selectedIdx = null;
+    document.getElementById("actionMenu").innerHTML = "";
+    renderBattle();
+    if(!checkEnd()) setTimeout(enemyTurn, 600);
+}
+
+async function flipCoin(isSpecial) {
+    if (!isSpecial) return true;
+    const container = document.getElementById("coin-container");
+    const coin = document.getElementById("coin");
+    container.style.display = "block";
+    container.style.animation = "toss 1.2s ease-out forwards";
+    const win = Math.random() < 0.5; 
+    const toursComplets = 5 + Math.floor(Math.random() * 3); 
+    let finalDeg = toursComplets * 360; 
+    if (!win) finalDeg += 180; 
+    coin.style.transition = "transform 1.2s cubic-bezier(0.4, 0, 0.2, 1)";
+    coin.style.transform = `rotateY(${finalDeg}deg)`;
+    await new Promise(r => setTimeout(r, 1300));
+    container.style.display = "none";
+    coin.style.transition = "none";
+    coin.style.transform = "rotateY(0deg)";
+    return win; 
+}
+
+async function enemyTurn() {
+    const atkrs = enemyDeck.filter(e => e.hp > 0);
+    const trgts = playerDeck.filter(p => p.hp > 0);
+    
+    if(atkrs.length && trgts.length) {
+        // Sélection de l'attaquant et de la cible
+        const botIdx = enemyDeck.indexOf(atkrs[Math.floor(Math.random()*atkrs.length)]);
+        const playerTrgtIdx = playerDeck.indexOf(trgts[Math.floor(Math.random()*trgts.length)]);
+        
+        const bot = enemyDeck[botIdx];
+        const aEl = document.getElementById(`e-card-${botIdx}`);
+        const tEl = document.getElementById(`p-card-${playerTrgtIdx}`);
+
+        // Décider si le bot fait un spécial (30% de chance)
+        const wantsSpecial = Math.random() < 0.3;
+        let finalMult = 1;
+        let attackName = "Attaque";
+
+        if (wantsSpecial) {
+            finalMult = 2.5;
+            attackName = bot.special;
+            
+            // --- AFFICHAGE DU NOM DE L'ATTAQUE DU BOT ---
+            const specLabel = document.createElement("div");
+            specLabel.innerText = attackName.toUpperCase();
+            specLabel.style = "position:fixed; top:20%; left:50%; transform:translateX(-50%); font-size:40px; color:#ff4757; font-weight:900; text-shadow:0 0 15px rgba(255,71,87,0.8); z-index:2100; animation: vsScale 0.5s ease-out;";
+            document.body.appendChild(specLabel);
+            setTimeout(() => specLabel.remove(), 1000);
+        }
+
+        // Animation de duel
+        document.getElementById("vsOverlay").classList.add("vs-pop");
+        aEl.classList.add("duel-e"); 
+        tEl.classList.add("duel-p");
+        
+        await new Promise(r => setTimeout(r, 400));
+        aEl.classList.add("atk-hit-e");
+        await new Promise(r => setTimeout(r, 150));
+
+        // Calcul des dégâts
+        const dmg = Math.round(bot.atkPower * finalMult);
+        playerDeck[playerTrgtIdx].hp = Math.max(0, playerDeck[playerTrgtIdx].hp - dmg);
+        
+        // Log personnalisé
+        if(wantsSpecial) {
+            log(`🔥 ${bot.nom} déclenche ${attackName} ! (-${dmg})`);
+        } else {
+            log(`💥 ${bot.nom} attaque ! (-${dmg})`);
+        }
+
+        await new Promise(r => setTimeout(r, 400));
+        aEl.classList.remove("duel-e", "atk-hit-e"); 
+        tEl.classList.remove("duel-p");
+        document.getElementById("vsOverlay").classList.remove("vs-pop");
+    }
+    
+    canPlay = true; 
+    renderBattle(); 
+    checkEnd();
+}
+function rouletteHeal() {
+    const p = playerDeck[selectedIdx];
+    p.hp = Math.min(p.maxHP, p.hp + Math.round(p.maxHP*0.25));
+    log(`💚 ${p.nom} se soigne`);
+    document.getElementById("actionMenu").innerHTML = "";
+    renderBattle(); setTimeout(enemyTurn, 600);
+}
+
+function checkEnd() {
+    const win = enemyDeck.every(e => e.hp <= 0);
+    const lose = playerDeck.every(p => p.hp <= 0);
+    if(win || lose) {
+        canPlay = false;
+        document.getElementById("actionMenu").innerHTML = "";
+        const instructionEl = document.getElementById("instruction");
+        if (win) {
+            instructionEl.innerText = "VICTOIRE !";
+            const gains = { 'bronze': 10, 'argent': 25, 'or': 60, 'platine': 120, 'diamant': 300 };
+            let montant = (gains[currentDiff] || 10) + Math.floor(Math.random()*10);
+            totalGemmes += montant;
+            localStorage.setItem("gemmes", totalGemmes);
+            document.getElementById("gemCount").innerText = totalGemmes;
+            document.getElementById("gemDisplay").classList.add("gem-anim");
+            setTimeout(() => document.getElementById("gemDisplay").classList.remove("gem-anim"), 600);
+            log(`💎 Gain : ${montant} gemmes !`);
+            instructionEl.innerHTML += `<br><span style="color:#ffd700; font-size:1.2rem;">+${montant} 💎</span>`;
+        } else {
+            instructionEl.innerText = "DÉFAITE...";
+        }
+        document.getElementById("endGameMenu").classList.remove("hidden");
+        return true;
+    }
+    return false;
+}
+
+function log(m) {
+    const l = document.getElementById("battleLog");
+    l.innerHTML = `<div style="padding:4px; border-bottom:1px solid #222;">${m}</div>` + l.innerHTML;
+}
+
+function surrender() {
+    playerDeck.forEach(p => p.hp = 0);
+    renderBattle(); checkEnd();
+}
+</script>
+  </body>
+</html>

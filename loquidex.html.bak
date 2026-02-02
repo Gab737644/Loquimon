@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Loquidex - Collection</title>
+    <style>
+        body { 
+            margin: 0; padding: 20px; 
+            background: linear-gradient(120deg, #FFE259, #FFA751); 
+            color: white; font-family: Arial, sans-serif; text-align: center; min-height: 100vh;
+        }
+        
+        /* Boutons de navigation */
+        #btnMenu { position: fixed; top: 20px; left: 20px; padding: 10px 20px; background: #333; color: white; border: 2px solid #666; border-radius: 10px; cursor: pointer; z-index: 1000; font-weight: bold; }
+        #btnInfo { position: fixed; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(0,0,0,0.7); color: #ffd700; border: 2px solid #ffd700; border-radius: 50%; cursor: pointer; z-index: 1000; font-weight: bold; font-size: 26px; box-shadow: 0 0 10px rgba(0,0,0,0.3); transition: 0.3s; }
+        #btnInfo:hover { transform: scale(1.1); background: #ffd700; color: #000; }
+
+        h1 { text-shadow: 2px 2px 10px rgba(0,0,0,0.3); font-size: 50px; color: white; margin-bottom: 5px; }
+
+        /* Conteneurs de Rareté */
+        .rarity-section { 
+            margin: 30px auto; padding: 25px; border-radius: 25px; max-width: 1000px;
+            background: rgba(0, 0, 0, 0.25); border: 5px solid;
+            backdrop-filter: blur(8px);
+        }
+        .rarity-title { font-size: 28px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* Couleurs des Cadres */
+        .section-bronze { border-color: #cd7f32; }
+        .title-bronze { color: #ffbc7d; text-shadow: 2px 2px 4px black; }
+        
+        .section-argent { border-color: #e0e0e0; }
+        .title-argent { color: #ffffff; text-shadow: 2px 2px 4px black; }
+
+        .section-or { border-color: #ffd700; }
+        .title-or { color: #ffd700; text-shadow: 2px 2px 4px black; }
+
+        .section-platine { border-color: #00ffcc; }
+        .title-platine { color: #00ffcc; text-shadow: 2px 2px 4px black; }
+
+        .section-diamant { border-color: #00c6ff; }
+        .title-diamant { color: #00c6ff; text-shadow: 2px 2px 4px black; }
+
+        .section-unreal { border-image: linear-gradient(45deg, red, yellow, lime, cyan, blue, magenta, red) 1; display: none; }
+        .title-unreal { animation: rainbowText 2s linear infinite; }
+        @keyframes rainbowText { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+        /* Grille des cartes */
+        .grid { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; }
+        .slot { 
+            width: 110px; height: 175px; background: rgba(0,0,0,0.5); 
+            border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; 
+            position: relative; overflow: hidden; transition: 0.2s;
+        }
+        .possede { cursor: pointer; border-color: white; background: #1b1b1b; }
+        .possede:hover { transform: scale(1.1); z-index: 10; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+        .card-img { width: 100%; height: 100%; object-fit: cover; }
+        .mystere { display: flex; justify-content: center; align-items: center; height: 100%; font-size: 35px; color: rgba(255,255,255,0.15); }
+        .count { position: absolute; bottom: 3px; right: 3px; background: gold; color: black; padding: 1px 5px; border-radius: 5px; font-size: 11px; font-weight: bold; border: 1px solid black; }
+
+        /* Overlays (Zoom et Info) */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(10px); }
+        #zoomCard { width: 280px; height: 450px; border: 4px solid white; border-radius: 20px; overflow: hidden; box-shadow: 0 0 30px rgba(255,255,255,0.5); }
+        #zoomCard img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Fenêtre Info Probabilités */
+        .info-box { background: #1b1b1b; padding: 30px; border-radius: 20px; border: 3px solid #ffd700; width: 320px; text-align: left; box-shadow: 0 0 40px rgba(0,0,0,0.8); position: relative; }
+        .info-box h2 { color: #ffd700; margin-top: 0; text-align: center; font-size: 26px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .info-box ul { list-style: none; padding: 0; margin: 20px 0; }
+        .info-box li { margin: 12px 0; font-size: 19px; display: flex; justify-content: space-between; border-bottom: 1px solid #2a2a2a; padding-bottom: 5px; }
+        .info-box li span { font-weight: bold; color: #FFE259; }
+        .btn-close-info { width: 100%; padding: 12px; background: #ffd700; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-close-info:hover { background: #ffaa00; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <button id="btnMenu" onclick="window.location.href='index.html'">MENU</button>
+    <button id="btnInfo" onclick="ouvrirInfo()">?</button>
+    
+    <h1>LOQUIDEX</h1>
+    <p id="stats" style="font-size: 22px; font-weight: bold; text-shadow: 1px 1px 5px rgba(0,0,0,0.5);">Progression Totale : 0 / 47</p>
+
+    <div id="dex-container"></div>
+
+    <div id="overlayZoom" class="overlay" onclick="this.style.display='none'">
+        <div id="zoomCard"><img id="zoomImg" src=""></div>
+    </div>
+
+    <div id="overlayInfo" class="overlay" onclick="this.style.display='none'">
+        <div class="info-box" onclick="event.stopPropagation()">
+            <h2>Taux de drop</h2>
+            <p style="text-align: center; font-size: 0.9em; opacity: 0.6; margin-top: -10px;">(Pack Classique)</p>
+            <ul>
+                <li>Diamant : <span>0,5 %</span></li>
+                <li>Platine : <span>2 %</span></li>
+                <li>Or : <span>12 %</span></li>
+                <li>Argent : <span>30 %</span></li>
+                <li>Bronze : <span>55,5 %</span></li>
+            </ul>
+            <button class="btn-close-info" onclick="document.getElementById('overlayInfo').style.display='none'">FERMER</button>
+        </div>
+    </div>
+
+    <script>
+        const collection = JSON.parse(localStorage.getItem("collection")) || {};
+
+        const data = {
+            bronze: ["cafard", "mouche", "moustique", "pigeon", "rat", "escargot", "ver de terre", "taupe", "bousier", "abeille"],
+            argent: ["chat", "cheval", "chien", "poisson", "tortue", "cochon d'inde", "perruche", "écureuil", "cochon", "coq", "lapin", "vache", "serpent"],
+            or: ["aigle", "baleine", "cerf", "Elephant", "tigre", "lion", "loup", "girafe", "rhinoceros", "pingouin"],
+            platine: ["addax", "axolotl", "lynx", "macareux", "panthère", "requin", "pery", "panda"],
+            diamant: ["kraken", "Dragon", "licorne", "phénix", "yeti"],
+            unreal: ["Jésus"]
+        };
+
+        function chargerLoquidex() {
+            const mainContainer = document.getElementById("dex-container");
+            let globalPossede = 0;
+
+            for (const [rarete, liste] of Object.entries(data)) {
+                let countRarete = 0;
+                liste.forEach(nom => { if (collection[nom]) countRarete++; });
+                globalPossede += countRarete;
+
+                const section = document.createElement("div");
+                section.className = `rarity-section section-${rarete}`;
+                section.id = `section-${rarete}`;
+
+                const title = document.createElement("div");
+                title.className = `rarity-title title-${rarete}`;
+                title.innerText = `${rarete} (${countRarete} / ${liste.length})`;
+                section.appendChild(title);
+
+                const grid = document.createElement("div");
+                grid.className = "grid";
+
+                liste.forEach(nom => {
+                    const nbr = collection[nom] || 0;
+                    const estPossede = nbr > 0;
+
+                    const slot = document.createElement("div");
+                    slot.className = `slot ${estPossede ? 'possede' : 'non-decouvert'}`;
+                    
+                    if (estPossede) {
+                        slot.innerHTML = `<img src="images/${nom}.png" class="card-img"><div class="count">x${nbr}</div>`;
+                        slot.onclick = () => {
+                            document.getElementById("zoomImg").src = `images/${nom}.png`;
+                            document.getElementById("overlayZoom").style.display = "flex";
+                        };
+                    } else {
+                        slot.innerHTML = `<div class="mystere">?</div>`;
+                    }
+                    grid.appendChild(slot);
+                });
+
+                section.appendChild(grid);
+                if (rarete === "unreal" && countRarete > 0) section.style.display = "block";
+                mainContainer.appendChild(section);
+            }
+            document.getElementById("stats").innerText = `Progression Totale : ${globalPossede} / 47`;
+        }
+
+        function ouvrirInfo() {
+            document.getElementById("overlayInfo").style.display = "flex";
+        }
+
+        window.onload = chargerLoquidex;
+    </script>
+</body>
+</html>

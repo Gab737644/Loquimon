@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Shop - Loquimon</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(120deg, #FFE259, #FFA751);
+        color: white;
+      }
+
+      .container {
+        width: 90%;
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 34px;
+      }
+
+      .loquicoins {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 22px;
+        font-weight: bold;
+      }
+
+      .section {
+        margin-bottom: 25px;
+      }
+
+      .section h2 {
+        margin: 10px 0;
+        font-size: 22px;
+      }
+
+      .line {
+        display: flex;
+        gap: 15px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+      }
+
+      .card {
+        width: 180px;
+        height: 240px;
+        border-radius: 16px;
+        border: 2px solid rgba(255,255,255,0.4);
+        background: rgba(0,0,0,0.25);
+        position: relative;
+        flex: 0 0 auto;
+      }
+
+      .card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 14px;
+      }
+
+      .card button {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 8px 10px;
+        border-radius: 14px;
+        border: none;
+        background: linear-gradient(135deg, #ff6a00, #ffb000);
+        color: white;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .pack {
+        width: 100%;
+        height: 120px;
+        border-radius: 18px;
+        border: 2px solid rgba(255,255,255,0.4);
+        background: rgba(0,0,0,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        margin-bottom: 15px;
+      }
+
+      .pack h3 {
+        margin: 0;
+        font-size: 24px;
+      }
+
+      .pack button {
+        padding: 12px 18px;
+        border-radius: 18px;
+        border: none;
+        background: linear-gradient(135deg, #ff6a00, #ffb000);
+        color: white;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      #result {
+        text-align: center;
+        margin-top: 20px;
+        min-height: 330px;
+      }
+
+      #result img {
+        width: 220px;
+        height: 320px;
+        border-radius: 16px;
+        border: 4px solid #fff;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      }
+
+      #btnMenu {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        padding: 10px 15px;
+        border: 2px solid #666;
+        background: #1b1b1b;
+        color: white;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        z-index: 9999;
+      }
+
+      #btnMenu:hover {
+        background: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container"> <button id="btnMenu" onclick="goBack(event)">RETOUR</button>
+      <h1>SHOP</h1>
+      <div class="loquicoins" id="loquicoins">Loquicoins : 0</div>
+      <div class="section">
+        <h2>Bronze (5 LC)</h2>
+        <div class="line" id="lineBronze"></div>
+      </div>
+      <div class="section">
+        <h2>Argent (10 LC)</h2>
+        <div class="line" id="lineArgent"></div>
+      </div>
+      <div class="section">
+        <h2>Or (25 LC)</h2>
+        <div class="line" id="lineOr"></div>
+      </div>
+      <div class="section">
+        <div class="pack">
+          <div>
+            <h3>PACK PLATINE</h3>
+            <p>150 LC</p>
+          </div>
+          <button onclick="ouvrirPack('platine')">Ouvrir</button> </div>
+        <div class="pack">
+          <div>
+            <h3>PACK DIAMANT</h3>
+            <p>250 LC</p>
+          </div>
+          <button onclick="ouvrirPack('diamant')">Ouvrir</button> </div>
+      </div>
+      <div id="result"></div>
+    </div>
+    <script>
+      const prix = {
+        bronze: 5,
+        argent: 10,
+        or: 25,
+        platine: 150,
+        diamant: 250
+      };
+
+      // LISTES MISES À JOUR AVEC TES NOUVEAUX LOQUIMONS
+      const imagesBronze = ["images/cafard.png","images/mouche.png","images/moustique.png","images/pigeon.png","images/rat.png","images/escargot.png","images/ver de terre.png","images/taupe.png", "images/bousier.png", "images/abeille.png"];
+      const imagesArgent = ["images/chat.png","images/cheval.png","images/chien.png","images/poisson.png","images/tortue.png","images/cochon d'inde.png","images/perruche.png","images/écureuil.png", "images/cochon.png", "images/coq.png", "images/lapin.png", "images/vache.png", "images/serpent.png"];
+      const imagesOr = ["images/aigle.png","images/baleine.png","images/cerf.png","images/Elephant.png","images/tigre.png","images/lion.png","images/loup.png", "images/girafe.png", "images/rhinoceros.png", "images/pingouin.png"];
+      const imagesPlatine = ["images/addax.png","images/axolotl.png","images/lynx.png","images/macareux.png","images/panthère.png","images/requin.png", "images/pery.png", "images/panda.png"];
+      const imagesDiamant = ["images/kraken.png","images/dragon.png","images/licorne.png","images/phénix.png","images/yeti.png"];
+
+      function getLoquicoins() {
+        return parseInt(localStorage.getItem("loquicoins")) || 0;
+      }
+
+      function setLoquicoins(val) {
+        localStorage.setItem("loquicoins", val);
+        document.getElementById("loquicoins").innerText = "Loquicoins : " + val;
+      }
+
+      function init() {
+        setLoquicoins(getLoquicoins());
+        displayCards();
+      }
+
+      function ajouterCollection(imgSrc) {
+        let collection = JSON.parse(localStorage.getItem("collection")) || {};
+        let nom = imgSrc.split("/").pop().split(".")[0];
+        collection[nom] = (collection[nom] || 0) + 1;
+        localStorage.setItem("collection", JSON.stringify(collection));
+      }
+
+      function createCard(imgSrc, lineId, prixCarte) {
+        const line = document.getElementById(lineId);
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <img src="${imgSrc}" onerror="this.src='https://via.placeholder.com/180x240?text=Image+Manquante'">
+          <button onclick="acheterCarte('${imgSrc}', ${prixCarte})">ACHETER</button>
+        `;
+        line.appendChild(card);
+      }
+
+      function displayCards() {
+        imagesBronze.forEach(img => createCard(img, "lineBronze", prix.bronze));
+        imagesArgent.forEach(img => createCard(img, "lineArgent", prix.argent));
+        imagesOr.forEach(img => createCard(img, "lineOr", prix.or));
+      }
+
+      function acheterCarte(imgSrc, prixCarte) {
+        let coins = getLoquicoins();
+        if (coins < prixCarte) {
+          alert("Pas assez de Loquicoins !");
+          return;
+        }
+        coins -= prixCarte;
+        setLoquicoins(coins);
+        ajouterCollection(imgSrc);
+        showResult(imgSrc);
+      }
+
+      function ouvrirPack(type) {
+        let coins = getLoquicoins();
+        if (coins < prix[type]) {
+          alert("Pas assez de Loquicoins !");
+          return;
+        }
+
+        coins -= prix[type];
+        setLoquicoins(coins);
+
+        let imgSrc = "";
+        if (type === "platine") imgSrc = imagesPlatine[Math.floor(Math.random() * imagesPlatine.length)];
+        if (type === "diamant") imgSrc = imagesDiamant[Math.floor(Math.random() * imagesDiamant.length)];
+
+        ajouterCollection(imgSrc);
+        showResult(imgSrc);
+      }
+
+      function showResult(imgSrc) {
+        const result = document.getElementById("result");
+        result.innerHTML = `<img src="${imgSrc}" alt="Carte obtenue">`;
+      }
+
+      function goBack(event) {
+        window.location.href = "loquimon.html";
+      }
+
+      init();
+    </script>
+  </body>
+</html>

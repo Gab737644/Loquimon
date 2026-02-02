@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Booster Loquimon</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: linear-gradient(120deg, #FFE259, #FFA751); color: white; text-align: center; }
+        h1 { margin-top: 30px; }
+        #gemBar { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 20px; border: 2px solid #ffd700; color: #ffd700; font-weight: bold; z-index: 10000; }
+        .paquets { display: flex; justify-content: center; flex-wrap: wrap; gap: 30px; margin-top: 40px; padding: 20px; }
+        .paquet-container { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .paquet { width: 150px; height: 260px; cursor: pointer; transition: 0.3s; position: relative; }
+        .paquet img { width: 100%; height: 100%; object-fit: contain; border-radius: 15px; }
+        .paquet:hover { transform: scale(1.1); filter: brightness(1.2); }
+        .premium { border: 3px solid #ffd700; border-radius: 18px; box-shadow: 0 0 15px #ffd700; }
+        .price-tag { background: #ffd700; color: #000; padding: 4px 10px; border-radius: 10px; font-weight: bold; font-size: 0.9rem; }
+        .desactive { opacity: 0.3; cursor: not-allowed; pointer-events: none; filter: grayscale(1); }
+        #btnMainMenu { position: fixed; top: 20px; left: 20px; padding: 10px 15px; border: 2px solid #666; background: #1b1b1b; color: white; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        #timer { margin-top: 20px; font-size: 18px; color: #4ecca3; font-weight: bold; height: 24px; }
+    </style>
+</head>
+<body>
+    <button id="btnMainMenu" onclick="window.location.href='Loquimon.html'">MENU</button>
+    
+    <div id="gemBar">💎 <span id="valeurGemmes">0</span></div>
+    
+    <h1>Booster Loquimon</h1>
+    <p>Ouvre tes cadeaux quotidiens ou achète un Pack Premium !</p>
+    
+    <div id="timer"></div>
+
+    <div class="paquets">
+        <div class="paquet-container">
+            <div class="paquet" id="p1" onclick="ouvrirGratuit(1)"><img src="images/paquet.png"></div>
+            <span>Quotidien</span>
+        </div>
+        <div class="paquet-container">
+            <div class="paquet" id="p2" onclick="ouvrirGratuit(2)"><img src="images/paquet.png"></div>
+            <span>Quotidien</span>
+        </div>
+        <div class="paquet-container">
+            <div class="paquet" id="p3" onclick="ouvrirGratuit(3)"><img src="images/paquet.png"></div>
+            <span>Quotidien</span>
+        </div>
+        <div class="paquet-container">
+            <div class="paquet" id="p4" onclick="ouvrirGratuit(4)"><img src="images/paquet.png"></div>
+            <span>Quotidien</span>
+        </div>
+
+        <div class="paquet-container">
+            <div class="paquet premium" id="pPayant" onclick="acheterPackMega()">
+                <img src="images/paquet.png" style="filter: hue-rotate(280deg) brightness(1.5);">
+            </div>
+            <div class="price-tag">50 💎</div>
+        </div>
+    </div>
+
+    <script>
+        let gemmes = parseInt(localStorage.getItem("gemmes")) || 0;
+        document.getElementById("valeurGemmes").innerText = gemmes;
+
+        let ouvertures = JSON.parse(localStorage.getItem("paquetsOuverts")) || {};
+
+        // Griser les packs déjà ouverts
+        function rafraichirPacks() {
+            for(let i=1; i<=4; i++) {
+                if(ouvertures[i]) {
+                    const el = document.getElementById("p" + i);
+                    if(el) el.classList.add("desactive");
+                }
+            }
+        }
+        rafraichirPacks();
+
+        // FONCTION PACK GRATUIT
+        function ouvrirGratuit(n) {
+            ouvertures[n] = true;
+            localStorage.setItem("paquetsOuverts", JSON.stringify(ouvertures));
+            
+            sessionStorage.setItem("typePack", "gratuit"); // On définit le type
+            sessionStorage.setItem("peutOuvrir", "true"); 
+            window.location.href = "ouverture.html";
+        }
+
+        // FONCTION PACK MEGA (50 GEMMES)
+        function acheterPackMega() {
+            if (gemmes >= 50) {
+                gemmes -= 50;
+                localStorage.setItem("gemmes", gemmes);
+                
+                sessionStorage.setItem("typePack", "mega"); // On définit le type
+                sessionStorage.setItem("peutOuvrir", "true"); 
+                window.location.href = "ouverture.html";
+            } else {
+                alert("Pas assez de gemmes !");
+            }
+        }
+
+        // --- GESTION DU TIMER ---
+        const TIMER_DURATION = 15 * 60 * 1000;
+        let endTime = parseInt(localStorage.getItem("packsResetTime"));
+
+        function updateTimer() {
+            const allOpened = [1,2,3,4].every(i => ouvertures[i]);
+            if (allOpened) {
+                if (!endTime) {
+                    endTime = Date.now() + TIMER_DURATION;
+                    localStorage.setItem("packsResetTime", endTime);
+                }
+                const diff = endTime - Date.now();
+                if (diff <= 0) {
+                    localStorage.removeItem("paquetsOuverts");
+                    localStorage.removeItem("packsResetTime");
+                    location.reload();
+                } else {
+                    const m = Math.floor(diff/60000);
+                    const s = Math.floor((diff%60000)/1000);
+                    document.getElementById("timer").innerText = `Nouveaux gratuits dans ${m}m ${s}s`;
+                }
+            }
+        }
+        setInterval(updateTimer, 1000);
+        updateTimer();
+    </script>
+</body>
+</html>

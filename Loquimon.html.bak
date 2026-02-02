@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <script src="audio.js"></script>
+    <title>Loquimon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&amp;display=swap"
+
+      rel="stylesheet">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+      }
+
+      body {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(120deg, #FFE259, #FFA751);
+      }
+
+      /* LOQUICOINS */
+      #loquicoin {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        width: 60px;
+        height: 60px;
+        z-index: 9999;
+      }
+
+      #loquicoinCount {
+        position: fixed;
+        top: 22px;
+        left: 82px;
+        font-size: 22px;
+        font-weight: 700;
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        z-index: 9999;
+      }
+
+      /* Bouton lignes horizontales */
+      #optionsLines {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 40px;
+        height: 25px;
+        cursor: pointer;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      #optionsLines span {
+        width: 100%;
+        height: 4px;
+        background-color: white;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+      }
+
+      #optionsLines:hover span {
+        width: 105%;
+      }
+
+      /* Conteneur */
+      .menu {
+        width: 320px;
+        padding: 32px;
+        border-radius: 18px;
+        backdrop-filter: blur(14px);
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        text-align: center;
+      }
+
+      /* Titre */
+      .menu h1 {
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: #ffffff;
+        margin-bottom: 28px;
+      }
+
+      /* Boutons */
+      .btn {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        padding: 12px;
+        margin: 14px 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: #ffffff;
+        background: linear-gradient(135deg, #ff6a00, #ffb000);
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 30px;
+        cursor: pointer;
+        box-shadow:
+          0 4px 12px rgba(0, 0, 0, 0.35),
+          inset 0 0 0 rgba(255,255,255,0);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        transition: all 0.2s ease;
+      }
+
+      /* Hover */
+      .btn:hover {
+        background: linear-gradient(135deg, #ff8c00, #ffd000);
+        box-shadow:
+          0 6px 18px rgba(0, 0, 0, 0.45),
+          0 0 12px rgba(255, 170, 0, 0.9);
+        transform: translateY(-2px);
+      }
+
+      /* Press */
+      .btn:active {
+        transform: scale(0.95);
+        box-shadow:
+          0 2px 8px rgba(0,0,0,0.6),
+          inset 0 2px 6px rgba(0,0,0,0.4);
+      }
+
+      /* Ripple */
+      .btn span {
+        position: absolute;
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        background: rgba(255, 255, 255, 0.6);
+      }
+
+      @keyframes ripple {
+        to {
+          transform: scale(4);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body> <!-- LOQUICOINS --> <img id="loquicoin" src="images/loquicoin.png"
+
+      alt="Loquicoin">
+    <div id="loquicoinCount">0</div>
+    <!-- Bouton lignes horizontales -->
+    <div id="optionsLines" onclick="goOptions(event)"> <span></span> <span></span>
+      <span></span> </div>
+    <div class="menu">
+      <h1>LOQUIMON</h1>
+      <button class="btn" onclick="playGame(event)">JOUER</button> <button class="btn"
+
+        onclick="openLoquidex(event)">LOQUIDEX</button> <button class="btn" onclick="openHelp(event)">AIDE</button>
+      <button class="btn" onclick="openShop(event)">BOUTIQUE</button> <button class="btn"
+
+        onclick="goToFight(event)">COMBATS</button> </div>
+    <script>
+      function createRipple(event) {
+        const button = event.currentTarget;
+        const circle = document.createElement("span");
+        const diameter = Math.max(button.clientWidth, button.clientHeight);
+        const radius = diameter / 2;
+
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${event.clientX - button.offsetLeft - radius}px`;
+        circle.style.top = `${event.clientY - button.offsetTop - radius}px`;
+
+        button.appendChild(circle);
+        setTimeout(() => circle.remove(), 600);
+      }
+
+      function playGame(event) {
+        createRipple(event);
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 120);
+      }
+
+      function openLoquidex(event) {
+        createRipple(event);
+        setTimeout(() => {
+          window.location.href = "loquidex.html";
+        }, 120);
+      }
+
+      function openHelp(event) {
+        createRipple(event);
+        setTimeout(() => {
+          window.location.href = "aide.html";
+        }, 120);
+      }
+
+      function goToFight(event) {
+        createRipple(event);
+        setTimeout(() => {
+          window.location.href = "fight.html";
+        }, 120);
+      }
+
+      function openShop(event) {
+        createRipple(event);
+        setTimeout(() => {
+          window.location.href = "shop.html";
+        }, 120);
+      }
+
+      function goOptions(event) {
+        setTimeout(() => {
+          window.location.href = "options.html";
+        }, 120);
+      }
+
+      // Affichage Loquicoins
+      function updateLoquicoins() {
+        const loquicoins = JSON.parse(localStorage.getItem("loquicoins")) || 0;
+        document.getElementById("loquicoinCount").textContent = loquicoins;
+      }
+
+      updateLoquicoins();
+    </script>
+  </body>
+</html>

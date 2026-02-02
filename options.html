@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <title>Options</title>
+    <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(120deg, #FFE259, #FFA751);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      width: 360px;
+      padding: 30px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      margin-bottom: 25px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #ff8a00, #e52e71);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* ===== TOGGLE SILENCE (RÉPARÉ) ===== */
+    .switch {
+      position: relative;
+      width: 62px;
+      height: 34px;
+    }
+
+    .switch input {
+      display: none;
+    }
+
+    .slider-toggle {
+      position: absolute;
+      inset: 0;
+      background: #d0d0d0;
+      border-radius: 40px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+      transition: background 0.3s;
+    }
+
+    .slider-toggle::before {
+      content: "";
+      position: absolute;
+      height: 28px;
+      width: 28px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+      transition: transform 0.3s;
+    }
+
+    input:checked + .slider-toggle {
+      background: #4cd964;
+    }
+
+    input:checked + .slider-toggle::before {
+      transform: translateX(28px);
+    }
+
+    /* ===== SLIDER VOLUME COLORÉ ===== */
+    .volume-slider {
+      -webkit-appearance: none;
+      width: 180px;
+      height: 12px;
+      border-radius: 12px;
+      background: linear-gradient(
+        to right,
+        #ff8a00 0%,
+        #e52e71 50%,
+        rgba(255,255,255,0.3) 50%,
+        rgba(255,255,255,0.3) 100%
+      );
+      outline: none;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .volume-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.12);
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      cursor: pointer;
+    }
+  </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Options</h1>
+      <!-- SILENCE -->
+      <div class="row"> <span>Musique</span> <label class="switch"> <input id="toggleMusic"
+
+            type="checkbox"> <span class="slider-toggle"></span> </label> </div>
+      <!-- VOLUME -->
+      <div class="row"> <span>Volume</span> <input id="volumeSlider" class="volume-slider"
+
+          min="0" max="1" step="0.01" type="range"> </div>
+      <!-- LANGUE -->
+      <div class="row"> <span>Langue</span> <button class="btn">Français</button>
+      </div>
+      <button class="btn" onclick="window.location.href='loquimon.html'">Retour</button>
+    </div>
+    <script>
+    const musiqueFond = new Audio("audio/musique_fond.mp3");
+    musiqueFond.loop = true;
+
+    let soundSettings = JSON.parse(localStorage.getItem("soundSettings")) || {
+      muted: true,
+      volume: 0.5
+    };
+
+    const toggleMusic = document.getElementById("toggleMusic");
+    const volumeSlider = document.getElementById("volumeSlider");
+
+    musiqueFond.volume = soundSettings.volume;
+    volumeSlider.value = soundSettings.volume;
+    toggleMusic.checked = !soundSettings.muted;
+
+    function updateSliderColor(value) {
+      const percent = value * 100;
+      volumeSlider.style.background = `
+        linear-gradient(
+          to right,
+          #ff8a00 0%,
+          #e52e71 ${percent}%,
+          rgba(255,255,255,0.3) ${percent}%,
+          rgba(255,255,255,0.3) 100%
+        )
+      `;
+    }
+
+    updateSliderColor(volumeSlider.value);
+
+    toggleMusic.addEventListener("change", () => {
+      soundSettings.muted = !toggleMusic.checked;
+
+      if (soundSettings.muted) {
+        musiqueFond.pause();
+      } else {
+        musiqueFond.play().catch(() => {});
+      }
+
+      localStorage.setItem("soundSettings", JSON.stringify(soundSettings));
+    });
+
+    volumeSlider.addEventListener("input", e => {
+      soundSettings.volume = e.target.value;
+      musiqueFond.volume = soundSettings.volume;
+      updateSliderColor(soundSettings.volume);
+      localStorage.setItem("soundSettings", JSON.stringify(soundSettings));
+    });
+  </script>
+   
+  </body>
+</html>
